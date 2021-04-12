@@ -329,10 +329,27 @@
 
 <!-- more -->]]></content>
       <categories>
-        <category>C++ code</category>
+        <category>c++</category>
+        <category>code</category>
       </categories>
       <tags>
-        <tag>C++ code</tag>
+        <tag>c++</tag>
+        <tag>code</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>线程池</title>
+    <url>/2021/04/12/%E7%BA%BF%E7%A8%8B%E6%B1%A0/</url>
+    <content><![CDATA[<h1 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h1><span id="more"></span>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line">#pragma once</span><br><span class="line"></span><br><span class="line">#include &lt;thread&gt;</span><br><span class="line">#include &lt;vector&gt;</span><br><span class="line">#include &lt;queue&gt;</span><br><span class="line">#include &lt;future&gt;</span><br><span class="line">#include &lt;algorithm&gt;</span><br><span class="line"></span><br><span class="line">class ThreadPool</span><br><span class="line">&#123;</span><br><span class="line">public:</span><br><span class="line">	ThreadPool(size_t num &#x3D; std::thread::hardware_concurrency())</span><br><span class="line">	&#123;</span><br><span class="line">		for (size_t i &#x3D; 0; i &lt; num; ++i)</span><br><span class="line">		&#123;</span><br><span class="line">			threads_.emplace_back(</span><br><span class="line">				[this]() &#123;</span><br><span class="line">					for (;;)</span><br><span class="line">					&#123;</span><br><span class="line">						std::function&lt;void()&gt; task;</span><br><span class="line"></span><br><span class="line">						&#123;</span><br><span class="line">							std::unique_lock&lt;std::mutex&gt; locker(enqueue_mutex_);</span><br><span class="line">							condition_.wait(locker, [this] &#123;return is_stop_ || !tasks_.empty(); &#125;);</span><br><span class="line"></span><br><span class="line">							if (is_stop_ &amp;&amp; tasks_.empty())</span><br><span class="line">								return;</span><br><span class="line"></span><br><span class="line">							task &#x3D; std::move(tasks_.front());</span><br><span class="line">							tasks_.pop();</span><br><span class="line">						&#125;</span><br><span class="line">                        </span><br><span class="line">						task();</span><br><span class="line">					&#125;</span><br><span class="line">				&#125;</span><br><span class="line">			);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	template&lt;class F, class ...Args&gt;</span><br><span class="line">	auto enqueue(F&amp;&amp; f, Args&amp;&amp; ...args)-&gt;std::future&lt;decltype(f(args...))&gt;</span><br><span class="line">	&#123;</span><br><span class="line">		using return_type &#x3D; decltype(f(args...));</span><br><span class="line"></span><br><span class="line">		auto task &#x3D; std::make_shared&lt;std::packaged_task&lt;return_type()&gt;&gt;(</span><br><span class="line">			std::bind(std::forward&lt;F&gt;(f), std::forward&lt;Args&gt;(args)...)</span><br><span class="line">		);</span><br><span class="line">		</span><br><span class="line">		std::future&lt;return_type&gt; res &#x3D; task-&gt;get_future();</span><br><span class="line">		&#123;</span><br><span class="line">			std::unique_lock&lt;std::mutex&gt; locker(enqueue_mutex_);</span><br><span class="line"></span><br><span class="line">			if (is_stop_)</span><br><span class="line">				throw std::runtime_error(&quot;Enqueue on stop ThreadPool.&quot;);</span><br><span class="line"></span><br><span class="line">			tasks_.emplace([task] &#123;(*task)(); &#125;);</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		condition_.notify_one();</span><br><span class="line"></span><br><span class="line">		return res;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	~ThreadPool()</span><br><span class="line">	&#123;</span><br><span class="line">		&#123;</span><br><span class="line">			std::unique_lock&lt;std::mutex&gt; locker(enqueue_mutex_);</span><br><span class="line">			is_stop_ &#x3D; true;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		condition_.notify_all();</span><br><span class="line"></span><br><span class="line">		std::for_each(threads_.begin(), threads_.end(), std::mem_fn(&amp;std::thread::join));</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">private:</span><br><span class="line">	std::vector&lt;std::thread&gt; threads_;</span><br><span class="line">	std::queue&lt;std::function&lt;void()&gt;&gt; tasks_;</span><br><span class="line">	std::mutex enqueue_mutex_;</span><br><span class="line">	std::condition_variable condition_;</span><br><span class="line">	std::atomic_bool is_stop_;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<!-- more -->]]></content>
+      <categories>
+        <category>c++</category>
+        <category>code</category>
+      </categories>
+      <tags>
+        <tag>c++</tag>
+        <tag>code</tag>
       </tags>
   </entry>
 </search>
